@@ -18,6 +18,7 @@ package org.apache.kafka.streams.kstream.internals;
 
 import org.apache.kafka.common.MetricName;
 import org.apache.kafka.common.metrics.Metrics;
+import org.apache.kafka.common.metrics.Sensor;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.LogContext;
 import org.apache.kafka.streams.KeyValue;
@@ -27,11 +28,11 @@ import org.apache.kafka.streams.kstream.Aggregator;
 import org.apache.kafka.streams.kstream.Initializer;
 import org.apache.kafka.streams.kstream.Merger;
 import org.apache.kafka.streams.kstream.SessionWindows;
+import org.apache.kafka.streams.kstream.StreamMetricsMockUtil;
 import org.apache.kafka.streams.kstream.Windowed;
 import org.apache.kafka.streams.processor.internals.metrics.TaskMetrics;
 import org.apache.kafka.streams.processor.Processor;
 import org.apache.kafka.streams.processor.To;
-import org.apache.kafka.streams.processor.internals.MockStreamsMetrics;
 import org.apache.kafka.streams.processor.internals.ProcessorRecordContext;
 import org.apache.kafka.streams.processor.internals.metrics.StreamsMetricsImpl;
 import org.apache.kafka.streams.processor.internals.ToInternal;
@@ -48,6 +49,9 @@ import org.apache.kafka.test.TestUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -66,6 +70,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({StreamsMetricsImpl.class, Sensor.class})
 public class KStreamSessionWindowAggregateProcessorTest {
 
     private static final long GAP_MS = 5 * 60 * 1000L;
@@ -94,7 +100,7 @@ public class KStreamSessionWindowAggregateProcessorTest {
     public void initializeStore() {
         final File stateDir = TestUtils.tempDirectory();
         metrics = new Metrics();
-        final MockStreamsMetrics metrics = new MockStreamsMetrics(KStreamSessionWindowAggregateProcessorTest.this.metrics);
+        final StreamsMetricsImpl metrics = StreamMetricsMockUtil.mockStreamsMetrics();
 
         context = new InternalMockProcessorContext(
             stateDir,
@@ -406,7 +412,7 @@ public class KStreamSessionWindowAggregateProcessorTest {
     }
 
     private InternalMockProcessorContext createInternalMockProcessorContext(final String builtInMetricsVersion) {
-        final StreamsMetricsImpl streamsMetrics = new StreamsMetricsImpl(metrics, "test", builtInMetricsVersion);
+        final StreamsMetricsImpl streamsMetrics = StreamMetricsMockUtil.mockStreamsMetrics();
         final InternalMockProcessorContext context = new InternalMockProcessorContext(
             TestUtils.tempDirectory(),
             Serdes.String(),
